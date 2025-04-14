@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rei Arthur</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+      margin: 20px 0;
+      transition: transform 0.3s ease;
+    }
+    .controls {
+      margin: 10px 0;
+    }
+    input[type="number"] {
+      width: 60px;
+      padding: 5px;
+      font-size: 16px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 16px;
+      margin: 0 5px;
+      cursor: pointer;
+    }
+    #fullscreenBtn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+    #progressContainer {
+      max-width: 600px;
+      margin: 10px auto;
+      text-align: center;
+    }
+    #progressText {
+      margin-bottom: 5px;
+      font-size: 16px;
+      color: #333;
+    }
+    #progressBarWrapper {
+      width: 100%;
+      height: 12px;
+      background-color: #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: #4caf50;
+      transition: width 0.3s ease;
+    }
+    .zoom-controls {
+      margin: 10px auto;
+      text-align: center;
+      font-size: 18px;
+    }
+    .zoom-controls button {
+      font-size: 20px;
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="fullscreenBtn" onclick="toggleFullscreen()">🖵 Tela cheia</button>
+
+  <h1>Rei Arthur e os Cavaleiros da T&aacute;vola Redonda</h1>
+
+  <!-- Controles no topo -->
+  <div class="controls">
+    <button onclick="changePage(-1)">Anterior</button>
+    <input type="number" id="pageInputTop" min="1" value="1" onchange="goToPage(this.value)" />
+    <button onclick="changePage(1)">Próximo</button>
+  </div>
+
+  <!-- Indicador de progresso -->
+  <div id="progressContainer">
+    <div id="progressText">Página 1 de 75</div>
+    <div id="progressBarWrapper">
+      <div id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- Controles de Zoom -->
+  <div class="zoom-controls">
+    <button onclick="changeZoom(-0.1)">🔍➖</button>
+    <span id="zoomLevel">100%</span>
+    <button onclick="changeZoom(0.1)">🔍➕</button>
+  </div>
+
+  <!-- Imagem principal -->
+  <img id="imageViewer" src="" alt="Página do Livro" />
+
+  <!-- Controles no final -->
+  <div class="controls">
+    <button onclick="changePage(-1)">Anterior</button>
+    <input type="number" id="pageInputBottom" min="1" value="1" onchange="goToPage(this.value)" />
+    <button onclick="changePage(1)">Próximo</button>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    const totalPages = 254;
+
+    let zoom = 1;
+    const zoomStep = 0.1;
+    const zoomMin = 0.5;
+    const zoomMax = 2;
+
+    function getImageUrl(pageNumber) {
+      return `https://image.slidesharecdn.com/reiarthureoscavaleirosdat-howardpyle-210528111924/85/Rei-arthur-e-os-cavaleiros-da-t-howard-pyle-${pageNumber}-638.jpg`;
+    }
+
+    function updateImage() {
+      const img = document.getElementById('imageViewer');
+      const url = getImageUrl(currentPage);
+      img.src = url;
+
+      document.getElementById('pageInputTop').value = currentPage;
+      document.getElementById('pageInputBottom').value = currentPage;
+
+      preloadImage(currentPage + 1);
+      preloadImage(currentPage - 1);
+      updateProgressBar();
+      applyZoom();
+    }
+
+    function changePage(offset) {
+      currentPage += offset;
+      if (currentPage < 1) currentPage = 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      updateImage();
+      scrollToTop();
+    }
+
+    function goToPage(page) {
+      const parsed = parseInt(page, 10);
+      if (!isNaN(parsed) && parsed >= 1 && parsed <= totalPages) {
+        currentPage = parsed;
+        updateImage();
+        scrollToTop();
+      } else {
+        document.getElementById('pageInputTop').value = currentPage;
+        document.getElementById('pageInputBottom').value = currentPage;
+      }
+    }
+
+    function preloadImage(page) {
+      if (page >= 1 && page <= totalPages) {
+        const img = new Image();
+        img.src = getImageUrl(page);
+      }
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateProgressBar() {
+      const percent = (currentPage / totalPages) * 100;
+      document.getElementById('progressBar').style.width = `${percent}%`;
+      document.getElementById('progressText').textContent = `Página ${currentPage} de ${totalPages}`;
+    }
+
+    function changeZoom(delta) {
+      zoom = Math.min(zoomMax, Math.max(zoomMin, zoom + delta));
+      applyZoom();
+    }
+
+    function applyZoom() {
+      const img = document.getElementById('imageViewer');
+      img.style.transform = `scale(${zoom})`;
+      img.style.transformOrigin = 'top center';
+      document.getElementById('zoomLevel').textContent = `${Math.round(zoom * 100)}%`;
+    }
+
+    function toggleFullscreen() {
+      const elem = document.documentElement;
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => alert(`Erro ao entrar no modo fullscreen: ${err.message}`));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    updateImage();
+  </script>
+
+</body>
+</html>
